@@ -1,9 +1,15 @@
 #!/bin/bash
-#setting up firewall
+# Setting up firewall on web-01
 
-sudo ufw allow 22/tcp
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
+# Set default policies first
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
-sudo ufw enable
+
+# Allow specific ports (after setting default policies)
+sudo ufw allow 22/tcp    # SSH
+sudo ufw allow 80/tcp    # HTTP
+sudo ufw allow 443/tcp   # HTTPS
+
+# Enable UFW
+sudo ufw --force enable
+
