@@ -8,8 +8,14 @@ apt-get install -y nginx
 # Create the index.html file
 echo "Holberton School for the win!" > /var/www/html/index.html
 
+# Stop nginx before configuration changes
+service nginx stop 2>/dev/null || true
+
+# Backup original configuration
+cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bak 2>/dev/null || true
+
 # Configure nginx with proper server block
-cat > /etc/nginx/sites-available/default << 'EOF'
+cat << 'EOF' > /etc/nginx/sites-available/default
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
@@ -29,16 +35,24 @@ server {
 }
 EOF
 
+# Remove any existing symlink and create new one
+rm -f /etc/nginx/sites-enabled/default
+ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+
 # Test nginx configuration
 nginx -t
 
-# Start nginx (compatible with both systemd and non-systemd systems)
-if command -v systemctl > /dev/null 2>&1 && systemctl is-system-running > /dev/null 2>&1; then
-    # System with systemd
-    systemctl restart nginx
-    systemctl enable nginx
-else
-    # System without systemd (like Docker containers)
-    service nginx stop 2>/dev/null || true
+# Start nginx service
+service nginx start
+
+# Force reload configuration
+nginx -s reload 2>/dev/null || service nginx reload
+
+# Give nginx a moment to fully start
+sleep 2
+
+# Verify nginx is running
+if ! pgrep nginx > /dev/null; then
+    echo "Starting nginx..."
     service nginx start
 fi
